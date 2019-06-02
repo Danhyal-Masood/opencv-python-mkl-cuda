@@ -1,4 +1,4 @@
-[![Downloads](http://pepy.tech/badge/opencv-python)](http://pepy.tech/project/opencv-python)
+MODIFIED TO BUILD WITH MKL AND CUDA.
 
 ## OpenCV on Wheels
 
