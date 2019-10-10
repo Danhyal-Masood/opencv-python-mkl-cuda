@@ -76,7 +76,7 @@ def main():
     # Path regexes with forward slashes relative to CMake install dir.
     rearrange_cmake_output_data = {
 
-        'cv2': ([r'bin/opencv_ffmpeg\d{3}%s\.dll' % ('_64' if x64 else '')] if os.name == 'nt' else []) +
+        'cv2': ([r'bin/opencv_videoio_ffmpeg\d{3}%s\.dll' % ('_64' if x64 else '')] if os.name == 'nt' else []) +
         # In Windows, in python/X.Y/<arch>/; in Linux, in just python/X.Y/.
         # Naming conventions vary so widely between versions and OSes
         # had to give up on checking them.
@@ -102,6 +102,10 @@ def main():
         # skbuild inserts PYTHON_* vars. That doesn't satisfy opencv build scripts in case of Py3
         "-DPYTHON%d_EXECUTABLE=%s" % (sys.version_info[0], sys.executable),
         "-DBUILD_opencv_python%d=ON" % sys.version_info[0],
+<<<<<<< HEAD
+=======
+
+>>>>>>> fd9fb99f2bdbe6e16c5bf1832bb8db5d0af65249
         # When off, adds __init__.py and a few more helper .py's. We use our own helper files with a different structure.
         "-DOPENCV_SKIP_PYTHON_LOADER=ON",
         # Relative dir to install the built module to in the build tree.
@@ -110,6 +114,7 @@ def main():
         # Otherwise, opencv scripts would want to install `.pyd' right into site-packages,
         # and skbuild bails out on seeing that
         "-DINSTALL_CREATE_DISTRIB=ON",
+<<<<<<< HEAD
         "-DWITH_FFMPEG=ON",
         "-DWITH_CUDA=ON",
         "-DENABLE_FAST_MATH=ON",
@@ -126,6 +131,9 @@ def main():
         "-DWITH_OPENGL=ON",
         "-DMKL_WITH_OPENMP=ON",
         "-DOPENCV_ENABLE_NONFREE=ON",
+=======
+
+>>>>>>> fd9fb99f2bdbe6e16c5bf1832bb8db5d0af65249
         # See opencv/CMakeLists.txt for options and defaults
         "-DBUILD_opencv_apps=OFF",
         "-DBUILD_SHARED_LIBS=OFF",
@@ -156,19 +164,12 @@ def main():
         cmake_args.append("-DWITH_V4L=ON")
         cmake_args.append("-DENABLE_PRECOMPILED_HEADERS=OFF")
 
-        if all(v in os.environ for v in ('JPEG_INCLUDE_DIR', 'JPEG_LIBRARY')):
-            cmake_args += [
-                "-DBUILD_JPEG=OFF",
-                "-DJPEG_INCLUDE_DIR=%s" % os.environ['JPEG_INCLUDE_DIR'],
-                "-DJPEG_LIBRARY=%s" % os.environ['JPEG_LIBRARY']
-            ]
-
     # Fixes for macOS builds
     if sys.platform == 'darwin':
         cmake_args.append("-DWITH_LAPACK=OFF")  # Some OSX LAPACK fns are incompatible, see
                                                 # https://github.com/skvark/opencv-python/issues/21
         cmake_args.append("-DCMAKE_CXX_FLAGS=-stdlib=libc++")
-        cmake_args.append("-DCMAKE_OSX_DEPLOYMENT_TARGET:STRING=10.7")
+        cmake_args.append("-DCMAKE_OSX_DEPLOYMENT_TARGET:STRING=10.8")
 
     if sys.platform.startswith('linux'):
         cmake_args.append("-DWITH_IPP=OFF")   # tests fail with IPP compiled with
@@ -176,6 +177,14 @@ def main():
                                               # see https://github.com/skvark/opencv-python/issues/138
     if sys.platform.startswith('linux') and not x64:
         cmake_args.append("-DCMAKE_CXX_FLAGS=-U__STRICT_ANSI__")
+        # patch openEXR when building on i386, see: https://github.com/openexr/openexr/issues/128
+        subprocess.check_call("patch -p0 < patches/patchOpenEXR", shell=True)
+
+
+    if 'CMAKE_ARGS' in os.environ:
+        import shlex
+        cmake_args.extend(shlex.split(os.environ['CMAKE_ARGS']))
+        del shlex
 
     # ABI config variables are introduced in PEP 425
     if sys.version_info[:2] < (3, 2):
