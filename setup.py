@@ -17,7 +17,7 @@ def main():
     cmake_source_dir = "opencv"
     build_contrib = True
     # headless flag to skip GUI deps if needed
-    build_headless = False
+    build_headless =False
 
     # Only import 3rd-party modules after having installed all the build dependencies:
     # any of them, or their dependencies, can be updated during that process,
@@ -47,7 +47,7 @@ def main():
     # https://stackoverflow.com/questions/1405913/python-32bit-or-64bit-mode
     x64 = sys.maxsize > 2**32
 
-    package_name = "opencv-python-mkl-cuda"
+    package_name = "opencv-python"
 
     if build_contrib and not build_headless:
         package_name = "opencv-contrib-python"
@@ -102,10 +102,7 @@ def main():
         # skbuild inserts PYTHON_* vars. That doesn't satisfy opencv build scripts in case of Py3
         "-DPYTHON%d_EXECUTABLE=%s" % (sys.version_info[0], sys.executable),
         "-DBUILD_opencv_python%d=ON" % sys.version_info[0],
-<<<<<<< HEAD
-=======
 
->>>>>>> fd9fb99f2bdbe6e16c5bf1832bb8db5d0af65249
         # When off, adds __init__.py and a few more helper .py's. We use our own helper files with a different structure.
         "-DOPENCV_SKIP_PYTHON_LOADER=ON",
         # Relative dir to install the built module to in the build tree.
@@ -114,16 +111,15 @@ def main():
         # Otherwise, opencv scripts would want to install `.pyd' right into site-packages,
         # and skbuild bails out on seeing that
         "-DINSTALL_CREATE_DISTRIB=ON",
-<<<<<<< HEAD
         "-DWITH_FFMPEG=ON",
-        "-DWITH_CUDA=ON",
-        "-DENABLE_FAST_MATH=ON",
-        "-DCUDA_FAST_MATH=ON",
-        "-DWITH_CUBLAS=ON",
+        # "-DWITH_CUDA=ON",
+        # "-DENABLE_FAST_MATH=ON",
+        # "-DCUDA_FAST_MATH=ON",
+        # "-DWITH_CUBLAS=ON",
         "-DWITH_EIGEN=ON",
         "-DBUILD_opencv_world=ON",
-        "-DBUILD_opencv_gapi=OFF",
-        "-DWITH_NVCUVID=OFF",
+        "-DBUILD_opencv_gapi=ON",
+        # "-DWITH_NVCUVID=OFF",
         "-DWITH_MKL=ON",
         "-DMKL_USE_MULTITHREAD=ON",
         "-DMKL_WITH_TBB=ON",
@@ -131,9 +127,6 @@ def main():
         "-DWITH_OPENGL=ON",
         "-DMKL_WITH_OPENMP=ON",
         "-DOPENCV_ENABLE_NONFREE=ON",
-=======
-
->>>>>>> fd9fb99f2bdbe6e16c5bf1832bb8db5d0af65249
         # See opencv/CMakeLists.txt for options and defaults
         "-DBUILD_opencv_apps=OFF",
         "-DBUILD_SHARED_LIBS=OFF",
@@ -149,11 +142,12 @@ def main():
         "-DBUILD_JASPER=ON",
         "-DBUILD_OPENEXR=ON",
         "-DBUILD_WEBP=ON",
+
     ] + (["-DOPENCV_EXTRA_MODULES_PATH=" + os.path.abspath("opencv_contrib/modules")] if build_contrib else [])
 
     # OS-specific components
     if (sys.platform == 'darwin' or sys.platform.startswith('linux')) and not build_headless:
-        cmake_args.append("-DWITH_QT=5")
+        cmake_args.append("-DWITH_QT=4")
 
     if build_headless:
         # it seems that cocoa cannot be disabled so on macOS the package is not truly headless
