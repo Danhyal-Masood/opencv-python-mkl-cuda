@@ -4,18 +4,10 @@ env:
         # pip dependencies to _test_ your project
         - TEST_DEPENDS="numpy==1.11.1"
         # params to bdist_wheel. used to set osx build target.
-        - BDIST_PARAMS=""
         - CONFIG_PATH="travis_config.sh"
         - USE_CCACHE=1
-        - PLAT=x86_64
         - UNICODE_WIDTH=32
-
-
-# Host Python is never used
-language: generic
-services: docker
-# https://docs.travis-ci.com/user/reference/xenial
-dist: xenial
+        - SDIST=0
 
 # Save some time, we and setup check them out on demand instead
 # https://docs.travis-ci.com/user/customizing-the-build/#Git-Clone-Depth
@@ -34,12 +26,17 @@ stages:
   - s1
   - final
 
-matrix:
+jobs:
   fast_finish: true
+  # Travis exclude is buggy, this seems to be the only way to disable default build
+  exclude:
+    - language: ruby
   include:
-
     - os: osx
-      osx_image: xcode8.3
+      env:
+        - MB_PYTHON_VERSION=3.8
+      language: generic
+      osx_image: xcode9.4
       stage: s1
       workspaces:
         create:
@@ -61,261 +58,207 @@ matrix:
           # used in OSX custom build script dealing with local bottle caching
           - $HOME/local_bottle_metadata
 
+    # source distributions
+    - os: linux
+      stage: s1
+      script: skip
+      env:
+        - SDIST=1
+        - ENABLE_CONTRIB=0
+        - ENABLE_HEADLESS=0
+      python: "3.8"
+      language: python
+      dist: xenial
+    - os: linux
+      stage: s1
+      script: skip
+      env:
+        - SDIST=1
+        - ENABLE_CONTRIB=0
+        - ENABLE_HEADLESS=1
+      python: "3.8"
+      language: python
+      dist: xenial
+    - os: linux
+      stage: s1
+      script: skip
+      env:
+        - SDIST=1
+        - ENABLE_CONTRIB=1
+        - ENABLE_HEADLESS=0
+      python: "3.8"
+      language: python
+      dist: xenial
+    - os: linux
+      stage: s1
+      script: skip
+      env:
+        - SDIST=1
+        - ENABLE_CONTRIB=1
+        - ENABLE_HEADLESS=1
+      python: "3.8"
+      language: python
+      dist: xenial
+
     # default builds for MacOS
       #further jobs in the list will use the same stage until the next assignment
     - stage: final
-      os: osx
-      osx_image: xcode8.3
-      env:
-        - MB_PYTHON_VERSION=2.7
-        - ENABLE_CONTRIB=0
-        - ENABLE_HEADLESS=0
-      workspaces:
-        use: brew_cache
     - os: osx
-      osx_image: xcode8.3
-      env:
-        - MB_PYTHON_VERSION=3.4
-        - ENABLE_CONTRIB=0
-        - ENABLE_HEADLESS=0
-      workspaces:
-        use: brew_cache
-    - os: osx
-      osx_image: xcode8.3
-      env:
-        - MB_PYTHON_VERSION=3.5
-        - ENABLE_CONTRIB=0
-        - ENABLE_HEADLESS=0
-      workspaces:
-        use: brew_cache
-    - os: osx
-      osx_image: xcode8.3
+      language: generic
+      osx_image: xcode9.4
       env:
         - MB_PYTHON_VERSION=3.6
         - ENABLE_CONTRIB=0
         - ENABLE_HEADLESS=0
+        - TEST_DEPENDS=numpy==1.13.3
       workspaces:
         use: brew_cache
     - os: osx
-      osx_image: xcode8.3
+      language: generic
+      osx_image: xcode9.4
       env:
         - MB_PYTHON_VERSION=3.7
         - ENABLE_CONTRIB=0
         - ENABLE_HEADLESS=0
         - TEST_DEPENDS=numpy==1.14.5
+      workspaces:
+        use: brew_cache
+    - os: osx
+      language: generic
+      osx_image: xcode9.4
+      env:
+        - MB_PYTHON_VERSION=3.8
+        - ENABLE_CONTRIB=0
+        - ENABLE_HEADLESS=0
+        - TEST_DEPENDS=numpy==1.17.3
       workspaces:
         use: brew_cache
 
     # headless builds for MacOS
     - os: osx
-      osx_image: xcode8.3
-      env:
-        - MB_PYTHON_VERSION=2.7
-        - ENABLE_CONTRIB=0
-        - ENABLE_HEADLESS=1
-      workspaces:
-        use: brew_cache
-    - os: osx
-      osx_image: xcode8.3
-      env:
-        - MB_PYTHON_VERSION=3.4
-        - ENABLE_CONTRIB=0
-        - ENABLE_HEADLESS=1
-      workspaces:
-        use: brew_cache
-    - os: osx
-      osx_image: xcode8.3
-      env:
-        - MB_PYTHON_VERSION=3.5
-        - ENABLE_CONTRIB=0
-        - ENABLE_HEADLESS=1
-      workspaces:
-        use: brew_cache
-    - os: osx
-      osx_image: xcode8.3
+      language: generic
+      osx_image: xcode9.4
       env:
         - MB_PYTHON_VERSION=3.6
         - ENABLE_CONTRIB=0
         - ENABLE_HEADLESS=1
+        - TEST_DEPENDS=numpy==1.13.3
       workspaces:
         use: brew_cache
     - os: osx
-      osx_image: xcode8.3
+      language: generic
+      osx_image: xcode9.4
       env:
         - MB_PYTHON_VERSION=3.7
         - ENABLE_CONTRIB=0
         - ENABLE_HEADLESS=1
         - TEST_DEPENDS=numpy==1.14.5
+      workspaces:
+        use: brew_cache
+    - os: osx
+      language: generic
+      osx_image: xcode9.4
+      env:
+        - MB_PYTHON_VERSION=3.8
+        - ENABLE_CONTRIB=0
+        - ENABLE_HEADLESS=1
+        - TEST_DEPENDS=numpy==1.17.3
       workspaces:
         use: brew_cache
 
     # Contrib builds for MacOS
     - os: osx
-      osx_image: xcode8.3
-      env:
-        - MB_PYTHON_VERSION=2.7
-        - ENABLE_CONTRIB=1
-        - ENABLE_HEADLESS=0
-      workspaces:
-        use: brew_cache
-    - os: osx
-      osx_image: xcode8.3
-      env:
-        - MB_PYTHON_VERSION=3.4
-        - ENABLE_CONTRIB=1
-        - ENABLE_HEADLESS=0
-      workspaces:
-        use: brew_cache
-    - os: osx
-      osx_image: xcode8.3
-      env:
-        - MB_PYTHON_VERSION=3.5
-        - ENABLE_CONTRIB=1
-        - ENABLE_HEADLESS=0
-      workspaces:
-        use: brew_cache
-    - os: osx
-      osx_image: xcode8.3
+      language: generic
+      osx_image: xcode9.4
       env:
         - MB_PYTHON_VERSION=3.6
         - ENABLE_CONTRIB=1
         - ENABLE_HEADLESS=0
+        - TEST_DEPENDS=numpy==1.13.3
       workspaces:
         use: brew_cache
     - os: osx
-      osx_image: xcode8.3
+      language: generic
+      osx_image: xcode9.4
       env:
         - MB_PYTHON_VERSION=3.7
         - ENABLE_CONTRIB=1
         - ENABLE_HEADLESS=0
         - TEST_DEPENDS=numpy==1.14.5
+      workspaces:
+        use: brew_cache
+    - os: osx
+      language: generic
+      osx_image: xcode9.4
+      env:
+        - MB_PYTHON_VERSION=3.8
+        - ENABLE_CONTRIB=1
+        - ENABLE_HEADLESS=0
+        - TEST_DEPENDS=numpy==1.17.3
       workspaces:
         use: brew_cache
 
     # headless contrib builds for MacOS
     - os: osx
-      osx_image: xcode8.3
-      env:
-        - MB_PYTHON_VERSION=2.7
-        - ENABLE_CONTRIB=1
-        - ENABLE_HEADLESS=1
-      workspaces:
-        use: brew_cache
-    - os: osx
-      osx_image: xcode8.3
-      env:
-        - MB_PYTHON_VERSION=3.4
-        - ENABLE_CONTRIB=1
-        - ENABLE_HEADLESS=1
-      workspaces:
-        use: brew_cache
-    - os: osx
-      osx_image: xcode8.3
-      env:
-        - MB_PYTHON_VERSION=3.5
-        - ENABLE_CONTRIB=1
-        - ENABLE_HEADLESS=1
-      workspaces:
-        use: brew_cache
-    - os: osx
-      osx_image: xcode8.3
+      language: generic
+      osx_image: xcode9.4
       env:
         - MB_PYTHON_VERSION=3.6
         - ENABLE_CONTRIB=1
         - ENABLE_HEADLESS=1
+        - TEST_DEPENDS=numpy==1.13.3
       workspaces:
         use: brew_cache
     - os: osx
-      osx_image: xcode8.3
+      language: generic
+      osx_image: xcode9.4
       env:
         - MB_PYTHON_VERSION=3.7
         - ENABLE_CONTRIB=1
         - ENABLE_HEADLESS=1
         - TEST_DEPENDS=numpy==1.14.5
+      workspaces:
+        use: brew_cache
+    - os: osx
+      language: generic
+      osx_image: xcode9.4
+      env:
+        - MB_PYTHON_VERSION=3.8
+        - ENABLE_CONTRIB=1
+        - ENABLE_HEADLESS=1
+        - TEST_DEPENDS=numpy==1.17.3
       workspaces:
         use: brew_cache
 
     # default builds for Linux
     - os: linux
-      env:
-        - MB_PYTHON_VERSION=2.7
-        - ENABLE_CONTRIB=0
-        - ENABLE_HEADLESS=0
-      cache:
-        directories: $HOME/.ccache
-    - os: linux
-      env:
-        - MB_PYTHON_VERSION=2.7
-        - UNICODE_WIDTH=16
-        - ENABLE_CONTRIB=0
-        - ENABLE_HEADLESS=0
-      cache:
-        directories: $HOME/.ccache
-    - os: linux
-      env:
-        - MB_PYTHON_VERSION=2.7
-        - PLAT=i686
-        - ENABLE_CONTRIB=0
-        - ENABLE_HEADLESS=0
-      cache:
-        directories: $HOME/.ccache
-    - os: linux
-      env:
-        - MB_PYTHON_VERSION=2.7
-        - PLAT=i686
-        - UNICODE_WIDTH=16
-        - ENABLE_CONTRIB=0
-        - ENABLE_HEADLESS=0
-      cache:
-        directories: $HOME/.ccache
-    - os: linux
-      env:
-        - MB_PYTHON_VERSION=3.4
-        - ENABLE_CONTRIB=0
-        - ENABLE_HEADLESS=0
-      cache:
-        directories: $HOME/.ccache
-    - os: linux
-      env:
-        - MB_PYTHON_VERSION=3.4
-        - PLAT=i686
-        - ENABLE_CONTRIB=0
-        - ENABLE_HEADLESS=0
-      cache:
-        directories: $HOME/.ccache
-    - os: linux
-      env:
-        - MB_PYTHON_VERSION=3.5
-        - ENABLE_CONTRIB=0
-        - ENABLE_HEADLESS=0
-      cache:
-        directories: $HOME/.ccache
-    - os: linux
-      env:
-        - MB_PYTHON_VERSION=3.5
-        - PLAT=i686
-        - ENABLE_CONTRIB=0
-        - ENABLE_HEADLESS=0
-      cache:
-        directories: $HOME/.ccache
-    - os: linux
+      language: generic
+      dist: xenial
+      services: docker
       env:
         - MB_PYTHON_VERSION=3.6
         - ENABLE_CONTRIB=0
         - ENABLE_HEADLESS=0
-        - TEST_DEPENDS=numpy==1.11.3
+        - TEST_DEPENDS=numpy==1.13.3
       cache:
         directories: $HOME/.ccache
     - os: linux
+      language: generic
+      dist: xenial
+      services: docker
       env:
         - MB_PYTHON_VERSION=3.6
         - PLAT=i686
         - ENABLE_CONTRIB=0
         - ENABLE_HEADLESS=0
-        - TEST_DEPENDS=numpy==1.11.3
+        - TEST_DEPENDS=numpy==1.13.3
+        - USE_CCACHE=0
       cache:
         directories: $HOME/.ccache
     - os: linux
+      language: generic
+      dist: xenial
+      services: docker
       env:
         - MB_PYTHON_VERSION=3.7
         - ENABLE_CONTRIB=0
@@ -324,96 +267,85 @@ matrix:
       cache:
         directories: $HOME/.ccache
     - os: linux
+      language: generic
+      dist: xenial
+      services: docker
       env:
         - MB_PYTHON_VERSION=3.7
         - PLAT=i686
         - ENABLE_CONTRIB=0
         - ENABLE_HEADLESS=0
         - TEST_DEPENDS=numpy==1.14.5
+        - USE_CCACHE=0
+      cache:
+        directories: $HOME/.ccache
+    - os: linux
+      language: generic
+      dist: xenial
+      services: docker
+      env:
+        - MB_PYTHON_VERSION=3.8
+        - ENABLE_CONTRIB=0
+        - ENABLE_HEADLESS=0
+        - TEST_DEPENDS=numpy==1.17.3
+      cache:
+        directories: $HOME/.ccache
+    - os: linux
+      language: generic
+      dist: xenial
+      services: docker
+      env:
+        - MB_PYTHON_VERSION=3.8
+        - PLAT=i686
+        - ENABLE_CONTRIB=0
+        - ENABLE_HEADLESS=0
+        - TEST_DEPENDS=numpy==1.17.3
+        - USE_CCACHE=0
+      cache:
+        directories: $HOME/.ccache
+    - os: linux
+      language: generic
+      dist: xenial
+      services: docker
+      env:
+        - MB_PYTHON_VERSION=3.8
+        - PLAT=i686
+        - ENABLE_CONTRIB=0
+        - ENABLE_HEADLESS=0
+        - TEST_DEPENDS=numpy==1.17.3
+        - USE_CCACHE=0
       cache:
         directories: $HOME/.ccache
 
     # headless builds for Linux
     - os: linux
-      env:
-        - MB_PYTHON_VERSION=2.7
-        - ENABLE_CONTRIB=0
-        - ENABLE_HEADLESS=1
-      cache:
-        directories: $HOME/.ccache
-    - os: linux
-      env:
-        - MB_PYTHON_VERSION=2.7
-        - UNICODE_WIDTH=16
-        - ENABLE_CONTRIB=0
-        - ENABLE_HEADLESS=1
-      cache:
-        directories: $HOME/.ccache
-    - os: linux
-      env:
-        - MB_PYTHON_VERSION=2.7
-        - PLAT=i686
-        - ENABLE_CONTRIB=0
-        - ENABLE_HEADLESS=1
-      cache:
-        directories: $HOME/.ccache
-    - os: linux
-      env:
-        - MB_PYTHON_VERSION=2.7
-        - PLAT=i686
-        - UNICODE_WIDTH=16
-        - ENABLE_CONTRIB=0
-        - ENABLE_HEADLESS=1
-      cache:
-        directories: $HOME/.ccache
-    - os: linux
-      env:
-        - MB_PYTHON_VERSION=3.4
-        - ENABLE_CONTRIB=0
-        - ENABLE_HEADLESS=1
-      cache:
-        directories: $HOME/.ccache
-    - os: linux
-      env:
-        - MB_PYTHON_VERSION=3.4
-        - PLAT=i686
-        - ENABLE_CONTRIB=0
-        - ENABLE_HEADLESS=1
-      cache:
-        directories: $HOME/.ccache
-    - os: linux
-      env:
-        - MB_PYTHON_VERSION=3.5
-        - ENABLE_CONTRIB=0
-        - ENABLE_HEADLESS=1
-      cache:
-        directories: $HOME/.ccache
-    - os: linux
-      env:
-        - MB_PYTHON_VERSION=3.5
-        - PLAT=i686
-        - ENABLE_CONTRIB=0
-        - ENABLE_HEADLESS=1
-      cache:
-        directories: $HOME/.ccache
-    - os: linux
+      language: generic
+      dist: xenial
+      services: docker
       env:
         - MB_PYTHON_VERSION=3.6
         - ENABLE_CONTRIB=0
         - ENABLE_HEADLESS=1
-        - TEST_DEPENDS=numpy==1.11.3
+        - TEST_DEPENDS=numpy==1.13.3
       cache:
         directories: $HOME/.ccache
     - os: linux
+      language: generic
+      dist: xenial
+      services: docker
       env:
         - MB_PYTHON_VERSION=3.6
         - PLAT=i686
         - ENABLE_CONTRIB=0
         - ENABLE_HEADLESS=1
-        - TEST_DEPENDS=numpy==1.11.3
+        - TEST_DEPENDS=numpy==1.13.3
+        - USE_CCACHE=0
       cache:
         directories: $HOME/.ccache
     - os: linux
+      language: generic
+      dist: xenial
+      services: docker
       env:
         - MB_PYTHON_VERSION=3.7
         - ENABLE_CONTRIB=0
@@ -422,96 +354,72 @@ matrix:
       cache:
         directories: $HOME/.ccache
     - os: linux
+      language: generic
+      dist: xenial
+      services: docker
       env:
         - MB_PYTHON_VERSION=3.7
         - PLAT=i686
         - ENABLE_CONTRIB=0
         - ENABLE_HEADLESS=1
         - TEST_DEPENDS=numpy==1.14.5
+        - USE_CCACHE=0
+      cache:
+        directories: $HOME/.ccache
+    - os: linux
+      language: generic
+      dist: xenial
+      services: docker
+      env:
+        - MB_PYTHON_VERSION=3.8
+        - ENABLE_CONTRIB=0
+        - ENABLE_HEADLESS=1
+        - TEST_DEPENDS=numpy==1.17.3
+      cache:
+        directories: $HOME/.ccache
+    - os: linux
+      language: generic
+      dist: xenial
+      services: docker
+      env:
+        - MB_PYTHON_VERSION=3.8
+        - PLAT=i686
+        - ENABLE_CONTRIB=0
+        - ENABLE_HEADLESS=1
+        - TEST_DEPENDS=numpy==1.17.3
+        - USE_CCACHE=0
       cache:
         directories: $HOME/.ccache
 
     # contrib builds for Linux
     - os: linux
-      env:
-        - MB_PYTHON_VERSION=2.7
-        - ENABLE_CONTRIB=1
-        - ENABLE_HEADLESS=0
-      cache:
-        directories: $HOME/.ccache
-    - os: linux
-      env:
-        - MB_PYTHON_VERSION=2.7
-        - UNICODE_WIDTH=16
-        - ENABLE_CONTRIB=1
-        - ENABLE_HEADLESS=0
-      cache:
-        directories: $HOME/.ccache
-    - os: linux
-      env:
-        - MB_PYTHON_VERSION=2.7
-        - PLAT=i686
-        - ENABLE_CONTRIB=1
-        - ENABLE_HEADLESS=0
-      cache:
-        directories: $HOME/.ccache
-    - os: linux
-      env:
-        - MB_PYTHON_VERSION=2.7
-        - PLAT=i686
-        - UNICODE_WIDTH=16
-        - ENABLE_CONTRIB=1
-        - ENABLE_HEADLESS=0
-      cache:
-        directories: $HOME/.ccache
-    - os: linux
-      env:
-        - MB_PYTHON_VERSION=3.4
-        - ENABLE_CONTRIB=1
-        - ENABLE_HEADLESS=0
-      cache:
-        directories: $HOME/.ccache
-    - os: linux
-      env:
-        - MB_PYTHON_VERSION=3.4
-        - PLAT=i686
-        - ENABLE_CONTRIB=1
-        - ENABLE_HEADLESS=0
-      cache:
-        directories: $HOME/.ccache
-    - os: linux
-      env:
-        - MB_PYTHON_VERSION=3.5
-        - ENABLE_CONTRIB=1
-        - ENABLE_HEADLESS=0
-      cache:
-        directories: $HOME/.ccache
-    - os: linux
-      env:
-        - MB_PYTHON_VERSION=3.5
-        - PLAT=i686
-        - ENABLE_CONTRIB=1
-        - ENABLE_HEADLESS=0
-      cache:
-        directories: $HOME/.ccache
-    - os: linux
+      language: generic
+      dist: xenial
+      services: docker
       env:
         - MB_PYTHON_VERSION=3.6
-        - TEST_DEPENDS=numpy==1.11.3
+        - TEST_DEPENDS=numpy==1.13.3
         - ENABLE_CONTRIB=1
         - ENABLE_HEADLESS=0
       cache:
         directories: $HOME/.ccache
     - os: linux
+      language: generic
+      dist: xenial
+      services: docker
       env:
         - MB_PYTHON_VERSION=3.6
         - PLAT=i686
-        - TEST_DEPENDS=numpy==1.11.3
+        - TEST_DEPENDS=numpy==1.13.3
         - ENABLE_CONTRIB=1
         - ENABLE_HEADLESS=0
+        - USE_CCACHE=0
       cache:
         directories: $HOME/.ccache
     - os: linux
+      language: generic
+      dist: xenial
+      services: docker
       env:
         - MB_PYTHON_VERSION=3.7
         - TEST_DEPENDS=numpy==1.14.5
@@ -520,97 +428,73 @@ matrix:
       cache:
         directories: $HOME/.ccache
     - os: linux
+      language: generic
+      dist: xenial
+      services: docker
       env:
         - MB_PYTHON_VERSION=3.7
         - PLAT=i686
         - TEST_DEPENDS=numpy==1.14.5
         - ENABLE_CONTRIB=1
         - ENABLE_HEADLESS=0
+        - USE_CCACHE=0
+      cache:
+        directories: $HOME/.ccache
+    - os: linux
+      language: generic
+      dist: xenial
+      services: docker
+      env:
+        - MB_PYTHON_VERSION=3.8
+        - TEST_DEPENDS=numpy==1.17.3
+        - ENABLE_CONTRIB=1
+        - ENABLE_HEADLESS=0
+      cache:
+        directories: $HOME/.ccache
+    - os: linux
+      language: generic
+      dist: xenial
+      services: docker
+      env:
+        - MB_PYTHON_VERSION=3.8
+        - PLAT=i686
+        - TEST_DEPENDS=numpy==1.17.3
+        - ENABLE_CONTRIB=1
+        - ENABLE_HEADLESS=0
+        - USE_CCACHE=0
       cache:
         directories: $HOME/.ccache
 
 
     # headless contrib builds for Linux
     - os: linux
-      env:
-        - MB_PYTHON_VERSION=2.7
-        - ENABLE_CONTRIB=1
-        - ENABLE_HEADLESS=1
-      cache:
-        directories: $HOME/.ccache
-    - os: linux
-      env:
-        - MB_PYTHON_VERSION=2.7
-        - UNICODE_WIDTH=16
-        - ENABLE_CONTRIB=1
-        - ENABLE_HEADLESS=1
-      cache:
-        directories: $HOME/.ccache
-    - os: linux
-      env:
-        - MB_PYTHON_VERSION=2.7
-        - PLAT=i686
-        - ENABLE_CONTRIB=1
-        - ENABLE_HEADLESS=1
-      cache:
-        directories: $HOME/.ccache
-    - os: linux
-      env:
-        - MB_PYTHON_VERSION=2.7
-        - PLAT=i686
-        - UNICODE_WIDTH=16
-        - ENABLE_CONTRIB=1
-        - ENABLE_HEADLESS=1
-      cache:
-        directories: $HOME/.ccache
-    - os: linux
-      env:
-        - MB_PYTHON_VERSION=3.4
-        - ENABLE_CONTRIB=1
-        - ENABLE_HEADLESS=1
-      cache:
-        directories: $HOME/.ccache
-    - os: linux
-      env:
-        - MB_PYTHON_VERSION=3.4
-        - PLAT=i686
-        - ENABLE_CONTRIB=1
-        - ENABLE_HEADLESS=1
-      cache:
-        directories: $HOME/.ccache
-    - os: linux
-      env:
-        - MB_PYTHON_VERSION=3.5
-        - ENABLE_CONTRIB=1
-        - ENABLE_HEADLESS=1
-      cache:
-        directories: $HOME/.ccache
-    - os: linux
-      env:
-        - MB_PYTHON_VERSION=3.5
-        - PLAT=i686
-        - ENABLE_CONTRIB=1
-        - ENABLE_HEADLESS=1
-      cache:
-        directories: $HOME/.ccache
-    - os: linux
+      language: generic
+      dist: xenial
+      services: docker
       env:
         - MB_PYTHON_VERSION=3.6
-        - TEST_DEPENDS=numpy==1.11.3
+        - TEST_DEPENDS=numpy==1.13.3
         - ENABLE_CONTRIB=1
         - ENABLE_HEADLESS=1
       cache:
         directories: $HOME/.ccache
     - os: linux
+      language: generic
+      dist: xenial
+      services: docker
       env:
         - MB_PYTHON_VERSION=3.6
         - PLAT=i686
-        - TEST_DEPENDS=numpy==1.11.3
+        - TEST_DEPENDS=numpy==1.13.3
         - ENABLE_CONTRIB=1
         - ENABLE_HEADLESS=1
+        - USE_CCACHE=0
       cache:
         directories: $HOME/.ccache
     - os: linux
+      language: generic
+      dist: xenial
+      services: docker
       env:
         - MB_PYTHON_VERSION=3.7
         - TEST_DEPENDS=numpy==1.14.5
@@ -619,32 +503,67 @@ matrix:
       cache:
         directories: $HOME/.ccache
     - os: linux
+      language: generic
+      dist: xenial
+      services: docker
       env:
         - MB_PYTHON_VERSION=3.7
         - PLAT=i686
         - TEST_DEPENDS=numpy==1.14.5
         - ENABLE_CONTRIB=1
         - ENABLE_HEADLESS=1
+        - USE_CCACHE=0
+      cache:
+        directories: $HOME/.ccache
+    - os: linux
+      language: generic
+      dist: xenial
+      services: docker
+      env:
+        - MB_PYTHON_VERSION=3.8
+        - TEST_DEPENDS=numpy==1.17.3
+        - ENABLE_CONTRIB=1
+        - ENABLE_HEADLESS=1
+      cache:
+        directories: $HOME/.ccache
+    - os: linux
+      language: generic
+      dist: xenial
+      services: docker
+      env:
+        - MB_PYTHON_VERSION=3.8
+        - PLAT=i686
+        - TEST_DEPENDS=numpy==1.17.3
+        - ENABLE_CONTRIB=1
+        - ENABLE_HEADLESS=1
+        - USE_CCACHE=0
       cache:
         directories: $HOME/.ccache
 
 # The first line is printed in the folding header in Travis output
 before_install: |
-    # Check out and prepare the source
     set -e
-    # Multibuild doesn't have releases, so --depth would break eventually (see
-    # https://superuser.com/questions/1240216/server-does-not-allow-request-for-unadvertised)
-    git submodule update --init multibuild
-    source multibuild/common_utils.sh
-    # https://github.com/matthew-brett/multibuild/issues/116
-    if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export ARCH_FLAGS=" "; fi
-    source multibuild/travis_steps.sh
-    # This sets -x
-    source travis_multibuild_customize.sh
-    echo $ENABLE_CONTRIB > contrib.enabled
-    echo $ENABLE_HEADLESS > headless.enabled
 
-    if [ -n "$IS_OSX" ]; then
+    if [[ $SDIST == 0 ]]; then
+      # Check out and prepare the source
+      # Multibuild doesn't have releases, so --depth would break eventually (see
+      # https://superuser.com/questions/1240216/server-does-not-allow-request-for-unadvertised)
+      git submodule update --init multibuild
+
+      source multibuild/common_utils.sh
+
+      # https://github.com/matthew-brett/multibuild/issues/116
+      if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export ARCH_FLAGS=" "; fi
+
+      source multibuild/travis_steps.sh
+      # This sets -x
+
+      source travis_multibuild_customize.sh
+      echo $ENABLE_CONTRIB > contrib.enabled
+      echo $ENABLE_HEADLESS > headless.enabled
+
+      if [ -n "$IS_OSX" ]; then
+        export PATH="/usr/local/sbin:$PATH"
         TAPS="$(brew --repository)/Library/Taps"
         if [ -e "$TAPS/caskroom/homebrew-cask" -a -e "$TAPS/homebrew/homebrew-cask" ]; then
             rm -rf "$TAPS/caskroom/homebrew-cask"
@@ -655,29 +574,42 @@ before_install: |
                     git clean -fxd || echo "status: $?"
                     sleep 1 || echo "status: $?"
                     git status || echo "status: $?"' \; || echo "status: $?"
-
         brew_cache_cleanup
+      fi
+      echo "end"
+      # Not interested in travis internal scripts' output
     fi
 
-    # Not interested in travis internal scripts' output
     set +x
 
 install: |
     # Build and package
     set -x
-    build_wheel $REPO_DIR $PLAT
+
+    if [[ $SDIST == 1 ]]; then
+      python -m pip install --upgrade pip
+      python -m pip install scikit-build
+      python setup.py sdist
+    else
+      build_wheel $REPO_DIR $PLAT
+    fi
+
     set +x
 
 script: |
     # Install and run tests
     set -x
-    install_run $PLAT && rc=$? || rc=$?
+    if [[ $SDIST == 1 ]]; then
+      echo "skipping tests because of sdist"
+    else
+      install_run $PLAT && rc=$? || rc=$?
+    fi
+
     set +x
 
     #otherwise, Travis logic terminates prematurely
     #https://travis-ci.community/t/shell-session-update-command-not-found-in-build-log-causes-build-to-fail-if-trap-err-is-set/817
     trap ERR
-
     test "$rc" -eq 0
 
 before_cache: |
@@ -685,47 +617,81 @@ before_cache: |
     set -e; set -x
     if [ -n "$IS_OSX" ]; then
 
-        # When Taps is cached, this dir causes "Error: file exists" on `brew update`
-        if [ -e "$(brew --repository)/Library/Taps/homebrew/homebrew-cask/homebrew-cask" ]; then
-            rm -rf "$(brew --repository)/Library/Taps/homebrew/homebrew-cask/homebrew-cask"
-        fi
+      # When Taps is cached, this dir causes "Error: file exists" on `brew update`
+      if [ -e "$(brew --repository)/Library/Taps/homebrew/homebrew-cask/homebrew-cask" ]; then
+        rm -rf "$(brew --repository)/Library/Taps/homebrew/homebrew-cask/homebrew-cask"
+      fi
 
-        brew_cache_cleanup
+      brew_cache_cleanup
 
     fi
     set +x; set +e
 
 after_success: |
-    # Upload wheels to pypi if requested
-    if [ -n "$TRAVIS_TAG" ]; then
-        set -x
+    # Upload wheels to pypi if tag is set
 
-        if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+    set -x
+
+    if [ -n "$TRAVIS_TAG" ]; then
+
+      if [[ $ENABLE_CONTRIB == 0 ]]; then
+        if [[ $ENABLE_HEADLESS == 0 ]]; then
+          echo "This is default build. Deployment will be done to to PyPI entry opencv-python."
+        else
+          echo "This is headless contrib build. Deployment will be done to to PyPI entry opencv-python-headless."
+        fi
+      else
+        if [[ $ENABLE_HEADLESS == 0 ]]; then
+          echo "This is contrib build. Deployment will be done to to PyPI entry opencv-contrib-python."
+        else
+          echo "This is headless contrib build. Deployment will be done to to PyPI entry opencv-contrib-python-headless."
+        fi
+      fi
+
+      if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+        if [[ $SDIST == 1 ]]; then
+          pip install twine
+          twine upload -u ${PYPI_USER} -p ${PASS} --skip-existing ${TRAVIS_BUILD_DIR}/dist/opencv*
+        else
           pip install --user twine
           pip install --user --upgrade six
+          twine upload -u ${PYPI_USER} -p ${PASS} --skip-existing ${TRAVIS_BUILD_DIR}/wheelhouse/opencv*
         fi
 
-        if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-          pip install twine
-          pip install --upgrade pyOpenSSL
-        fi
+      fi
 
-        if [[ $ENABLE_CONTRIB == 0 ]]; then
-            if [[ $ENABLE_HEADLESS == 0 ]]; then
-              echo "This is default build. Deployment will be done to to PyPI entry opencv-python."
-            else
-              echo "This is headless contrib build. Deployment will be done to to PyPI entry opencv-python-headless."
-            fi
+      if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+        # macpython 3.5 doesn't support recent TLS protocols which causes twine
+        # upload to fail, so we use the system Python to run twine
+        /usr/bin/python -m ensurepip --user
+        /usr/bin/python -m pip install --user -U pip
+        /usr/bin/python -m pip install --user -U -I twine
+
+        if [[ $SDIST == 1 ]]; then
+          /usr/bin/python -m twine upload -u ${PYPI_USER} -p ${PASS} --skip-existing ${TRAVIS_BUILD_DIR}/dist/opencv*
         else
-            if [[ $ENABLE_HEADLESS == 0 ]]; then
-              echo "This is contrib build. Deployment will be done to to PyPI entry opencv-contrib-python."
-            else
-              echo "This is headless contrib build. Deployment will be done to to PyPI entry opencv-contrib-python-headless."
-            fi
+          /usr/bin/python -m twine upload -u ${PYPI_USER} -p ${PASS} --skip-existing ${TRAVIS_BUILD_DIR}/wheelhouse/opencv*
         fi
 
-        twine upload -u ${USER} -p ${PASS} --skip-existing ${TRAVIS_BUILD_DIR}/wheelhouse/opencv*
-        set +x
-    else
-        echo "Tag not set, deployment skipped."
+      fi
+
     fi
+
+    # Save to Azure storage always
+
+    if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+      curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+    else
+      brew install azure-cli
+    fi
+
+    az storage container create -n ${TRAVIS_COMMIT} --public-access blob
+
+    if [[ $SDIST == 1 ]]; then
+      az storage blob upload-batch -d ${TRAVIS_COMMIT} -s ${TRAVIS_BUILD_DIR}/dist --pattern *.gz
+    else
+      az storage blob upload-batch -d ${TRAVIS_COMMIT} -s ${TRAVIS_BUILD_DIR}/wheelhouse --pattern opencv*.whl
+    fi
+
+    set +x
+

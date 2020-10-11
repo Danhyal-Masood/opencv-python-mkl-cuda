@@ -14,8 +14,11 @@ function bdist_wheel_cmd {
     # copied from multibuild's common_utils.sh
     # add osx deployment target so it doesnt default to 10.6
     local abs_wheelhouse=$1
-    python setup.py bdist_wheel $BDIST_PARAMS
+    CI_BUILD=1 pip wheel --verbose --wheel-dir="$PWD/dist" . $BDIST_PARAMS
     cp dist/*.whl $abs_wheelhouse
+    if [ -z "$IS_OSX" ]; then
+      /opt/python/cp37-cp37m/bin/python patch_auditwheel_whitelist.py
+    fi
     if [ -n "$USE_CCACHE" -a -z "$BREW_BOOTSTRAP_MODE" ]; then ccache -s; fi
 }
 
@@ -24,6 +27,7 @@ if [ -n "$IS_OSX" ]; then
   export MAKEFLAGS="-j$(sysctl -n hw.ncpu)"
 else
   echo "    > Linux environment "
+  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/Qt5.15.0/lib
   export MAKEFLAGS="-j$(grep -E '^processor[[:space:]]*:' /proc/cpuinfo | wc -l)"
 fi
 
@@ -64,8 +68,8 @@ if [ -n "$IS_OSX" ]; then
                 if (!$found_blank && /^$/) {$_.="conflicts_with \"ffmpeg\"\n\n"; $found_blank=1; next;}
                 if (!$bottle_block && /^\s*bottle do$/) { $bottle_block=1; next; }
                 if ($bottle_block) { if (/^\s*end\s*$/) { $bottle_block=0} elsif (/^\s*sha256\s/) {$_=""} next; }
-if (/^\s*depends_on "(x264|x265|xvid|frei0r|rubberband)"$/) {$_=""; next;}
-                if (/^\s*--enable-(gpl|libx264|libx265|libxvid|frei0r|librubberband)$/) {$_=""; next;}
+if (/^\s*depends_on "(x264|x265|xvid|frei0r|rubberband|libvidstab)"$/) {$_=""; next;}
+                if (/^\s*--enable-(gpl|libx264|libx265|libxvid|frei0r|librubberband|libvidstab)$/) {$_=""; next;}
                 ' <"$FF_FORMULA" >"$LFF_FORMULA"
             diff -u "$FF_FORMULA" "$LFF_FORMULA" || test $? -le 1
 
@@ -86,8 +90,9 @@ function pre_build {
 
   if [ -n "$IS_OSX" ]; then
     echo "Running for OSX"
-    
+
     local CACHE_STAGE; (echo "$TRAVIS_BUILD_STAGE_NAME" | grep -qiF "final") || CACHE_STAGE=1
+    export HOMEBREW_NO_AUTO_UPDATE=1
 
     #after the cache stage, all bottles and Homebrew metadata should be already cached locally
     if [ -n "$CACHE_STAGE" ]; then
@@ -96,35 +101,36 @@ function pre_build {
         brew_add_local_bottles
     fi
 
-    echo 'Installing QT4'
-    brew tap | grep -qxF cartr/qt4 || brew tap cartr/qt4
-    brew tap --list-pinned | grep -qxF cartr/qt4 || brew tap-pin cartr/qt4
-    if [ -n "$CACHE_STAGE" ]; then
-        brew_install_and_cache_within_time_limit qt@4 || { [ $? -gt 1 ] && return 2 || return 0; }
-    else
-        brew install qt@4
-    fi
-
     echo 'Installing FFmpeg'
 
     if [ -n "$CACHE_STAGE" ]; then
         brew_install_and_cache_within_time_limit ffmpeg_opencv || { [ $? -gt 1 ] && return 2 || return 0; }
     else
+        brew unlink python@2
         brew install ffmpeg_opencv
+    fi
+
+    echo 'Installing qt5'
+    
+    if [ -n "$CACHE_STAGE" ]; then
+        echo "Qt5 has bottle, no caching needed"
+    else
+        brew switch qt 5.13.2
+        brew pin qt
+        export PATH="/usr/local/opt/qt/bin:$PATH"
     fi
 
     if [ -n "$CACHE_STAGE" ]; then
         brew_go_bootstrap_mode 0
         return 0
     fi
-    
+
     # Have to install macpython late to avoid conflict with Homebrew Python update
     before_install
-    
+
   else
     echo "Running for linux"
   fi
-  qmake -query
 }
 
 function run_tests {
