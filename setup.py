@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # No 3rd-party modules here, see "3rd-party" note below
 import io
 import os
