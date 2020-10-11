@@ -863,4 +863,3 @@ class EmptyListWithLength(list):
 
 if __name__ == "__main__":
     main()
->>>>>>> 2ce6d972921564bf1818e39d0295060de354f8d6
